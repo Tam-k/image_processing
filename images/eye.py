@@ -64,7 +64,7 @@ tmp_img_RGB = cv2.cvtColor(tmp_img, cv2.COLOR_BGR2RGB)
 
 eye_img, x_min, x_max, y_min, y_max = cut_out_eye_img(img_cv2, landmark[36:42])
 
-# 表示確認
+# 表示確認(右目のみ)
 eye_img_copy = eye_img.copy()
 landmark_local = []
 for point in landmark[36:42]:
@@ -79,6 +79,12 @@ tmp_img_RGB = cv2.cvtColor(eye_img_copy, cv2.COLOR_BGR2RGB)
 
 tmp_img_GRAY = cv2.cvtColor(tmp_img_RGB, cv2.COLOR_RGB2GRAY)
 
+#大津の二値化
+ret, tmp_img_GRAY = cv2.threshold(tmp_img_GRAY, 10, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+tmp_img_GRAY = cv2.bitwise_not(tmp_img_GRAY)
+#適応的閾値処理
+#cv2.adaptiveThreshold(i, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 39, 2)
+
 aaa = np.array(landmark_local[1])
 bbb = np.array(landmark_local[4])
 ccc = np.array(landmark_local[2])
@@ -86,9 +92,9 @@ ddd = np.array(landmark_local[5])
 aboutRadius1 = (np.linalg.norm(aaa-bbb))/2
 aboutRadius2 = (np.linalg.norm(ccc-ddd))/2
 aboutRadius = int((aboutRadius1+aboutRadius2)/2)
-aboutRadiusa = int(aboutRadius/2)
+
 print(aboutRadius)
-circles = cv2.HoughCircles(tmp_img_GRAY, cv2.HOUGH_GRADIENT, dp=1, minDist=10, param1=100, param2=15, minRadius=(aboutRadius-aboutRadius), maxRadius=int(aboutRadius*1.15))
+circles = cv2.HoughCircles(tmp_img_GRAY, cv2.HOUGH_GRADIENT, dp=1, minDist=10, param1=100, param2=10, minRadius=int(aboutRadius*0.5), maxRadius=int(aboutRadius*1.2))
 #circles = cv2.HoughCircles(tmp_img_GRAY, cv2.HOUGH_GRADIENT, dp=1, minDist=1, param1=170, param2=5, minRadius=(aboutRadius-aboutRadius), maxRadius=(aboutRadius))
 #circlesの中身を整数値に丸めてキャスト
 circles = np.uint16(np.around(circles))
@@ -101,13 +107,12 @@ for circle in circles[0, :]:
 max_index = np.argmax(a)
 
 # 円周を描画する
-cv2.circle(tmp_img_GRAY, (circles[0][max_index][0], circles[0][max_index][1]), circles[0][max_index][2], (0, 165, 255), 1)
+cv2.circle(tmp_img_GRAY, (circles[0][max_index][0], circles[0][max_index][1]), circles[0][max_index][2], (100, 100, 100), 1)
 # 中心点を描画する
 cv2.circle(tmp_img_GRAY, (circles[0][max_index][0], circles[0][max_index][1]), 2, (0, 0, 255), 1)
-#for circle in circles[0, :]:
-    # 円周を描画する
-#    cv2.circle(tmp_img_GRAY, (circle[0], circle[1]), circle[2], (0, 165, 255), 1)
-    # 中心点を描画する
-#    cv2.circle(tmp_img_GRAY, (circle[0], circle[1]), 2, (0, 0, 255), 1)
 plt.imshow(tmp_img_GRAY)
 plt.show()
+
+#課題等々
+#・瞳の検出が微妙(明らかにずれていることあり)
+#・画素数挙げると重い
