@@ -2,8 +2,8 @@ import cv2
 import dlib
 import numpy as np
 from matplotlib import pyplot as plt
-from sqlalchemy import INTEGER
-import tracking
+import matplotlib.patches as patches
+
 plt.gray()  # グレースケール表示に必要
 
 def cut_out_eye_img(img_cv2, eye_points):
@@ -21,22 +21,24 @@ def cut_out_eye_img(img_cv2, eye_points):
     return eye_img, x_min, x_max, y_min, y_max
 
 # dlibの座標の出力形式を(x, y)のタプル形式に変換する
-def part_to_coordinates(part):
-    return (part.x, part.y)
-
 def shape_to_landmark(shape):
     landmark = []
     for i in range(shape.num_parts):
         landmark.append(part_to_coordinates(shape.part(i)))
     return landmark
 
+def part_to_coordinates(part):
+    return (part.x, part.y)
 
 image_path = R"C:\Users\class\Desktop\images\i3.jpg"
+# 処理高速化のためグレースケール化(任意)
+
 img_cv2 = cv2.imread(image_path, cv2.IMREAD_COLOR)
+img_gry = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2GRAY)
 img_RGB = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
 detector = dlib.get_frontal_face_detector()
 CUT_OFF = -0.1  #閾値の指定.-1を指定する事で検出する領域を意図的に増やしている
-rects, scores, types = detector.run(img_cv2, 1, CUT_OFF)    #矩形, スコア, サブ検出器の結果を返す
+rects, scores, types = detector.run(img_RGB, 1, CUT_OFF)    #矩形, スコア, サブ検出器の結果を返す
 
 print('------rects------')
 print(rects)
@@ -79,9 +81,12 @@ tmp_img_RGB = cv2.cvtColor(eye_img_copy, cv2.COLOR_BGR2RGB)
 
 tmp_img_GRAY = cv2.cvtColor(tmp_img_RGB, cv2.COLOR_RGB2GRAY)
 
+
 #大津の二値化
-ret, tmp_img_GRAY = cv2.threshold(tmp_img_GRAY, 10, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-tmp_img_GRAY = cv2.bitwise_not(tmp_img_GRAY)
+#ret, tmp_img_GRAY_re = cv2.threshold(tmp_img_GRAY, 200, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+#tmp_img_GRAY_re = cv2.bitwise_not(tmp_img_GRAY_re)
+#Canny法の二値化
+tmp_img_GRAY_re = cv2.Canny(tmp_img_GRAY,160,160)
 #適応的閾値処理
 #cv2.adaptiveThreshold(i, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 39, 2)
 
@@ -92,10 +97,10 @@ ddd = np.array(landmark_local[5])
 aboutRadius1 = (np.linalg.norm(aaa-bbb))/2
 aboutRadius2 = (np.linalg.norm(ccc-ddd))/2
 aboutRadius = int((aboutRadius1+aboutRadius2)/2)
-
 print(aboutRadius)
-circles = cv2.HoughCircles(tmp_img_GRAY, cv2.HOUGH_GRADIENT, dp=1, minDist=10, param1=100, param2=10, minRadius=int(aboutRadius*0.5), maxRadius=int(aboutRadius*1.2))
-#circles = cv2.HoughCircles(tmp_img_GRAY, cv2.HOUGH_GRADIENT, dp=1, minDist=1, param1=170, param2=5, minRadius=(aboutRadius-aboutRadius), maxRadius=(aboutRadius))
+
+circles = cv2.HoughCircles(tmp_img_GRAY_re, cv2.HOUGH_GRADIENT, dp=1, minDist=1, param1=150, param2=20, minRadius=int(aboutRadius*0.6), maxRadius=int(aboutRadius*1.3))
+#circles = cv2.HoughCircles(tmp_img_GRAY_re, cv2.HOUGH_GRADIENT, dp=1, minDist=1, param1=150, param2=5, minRadius=int(aboutRadius*0.6), maxRadius=int(aboutRadius*1.2))
 #circlesの中身を整数値に丸めてキャスト
 circles = np.uint16(np.around(circles))
 
@@ -106,13 +111,21 @@ for circle in circles[0, :]:
     a.append(b)
 max_index = np.argmax(a)
 
-# 円周を描画する
-cv2.circle(tmp_img_GRAY, (circles[0][max_index][0], circles[0][max_index][1]), circles[0][max_index][2], (100, 100, 100), 1)
-# 中心点を描画する
-cv2.circle(tmp_img_GRAY, (circles[0][max_index][0], circles[0][max_index][1]), 2, (0, 0, 255), 1)
-plt.imshow(tmp_img_GRAY)
+fig, ax = plt.subplots()
+im = ax.imshow(tmp_img_RGB)
+patch = patches.Circle((circles[0][max_index][0], circles[0][max_index][1]), circles[0][max_index][2], transform=ax.transData)
+im.set_clip_path(patch)
+
 plt.show()
+
 
 #課題等々
 #・瞳の検出が微妙(明らかにずれていることあり)
 #・画素数挙げると重い
+
+# 円周を描画する
+#cv2.circle(tmp_img_GRAY_re, (circles[0][max_index][0], circles[0][max_index][1]), circles[0][max_index][2], (100, 100, 100), 1)
+# 中心点を描画する
+#cv2.circle(tmp_img_GRAY_re, (circles[0][max_index][0], circles[0][max_index][1]), 2, (0, 0, 255), 1)
+#plt.imshow(tmp_img_GRAY_re)
+#plt.show()
