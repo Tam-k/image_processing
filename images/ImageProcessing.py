@@ -1,10 +1,8 @@
-#画像の扱い : img=元画像 , tmp=編集後
-
 import cv2
 import dlib
 import numpy as np
 from matplotlib import pyplot as plt
-import matplotlib.patches as patches
+import copy
 class Image:
     def __init__(self,image_path):
         self.image_path=image_path
@@ -15,7 +13,7 @@ class Image:
         img_RGB = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
         return (img_cv2,img_gry,img_RGB)
     
-    def binarization(img_gray):
+    def binarization(self,img_gray):
         #大津の二値化
         #ret, tmp_binarizationed = cv2.threshold(img_gray, 200, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         #tmp_binarizationed = cv2.bitwise_not(img_gray) #白黒反転
@@ -24,6 +22,26 @@ class Image:
         #適応的閾値処理
         #tmp_binarizationed = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 39, 2)
         return tmp_binarizationed
+    
+    def color_acquisition(self, img_RGB):   #img_RGBarray[y][x][RGBの配列]
+        img_RGB_array = np.asarray(img_RGB)
+        print(np.shape(img_RGB_array))
+        return img_RGB_array
+    
+    def RGB2HSV(self,img_RGB_array):
+        img_HSV_array = [[[]]]
+        for point in img_RGB_array:
+            print(point)
+    
+    def image_display(self,img):
+        plt.imshow(img)
+        plt.show()
+    
+    #def image_save(self,img):
+    #    plt.imshow(img)
+    #    plt.axis('tight')
+    #    plt.axis("off")
+    #    plt.savefig("img.jpg")
     
     
     
@@ -46,13 +64,13 @@ class Recognition:
         rects, scores, types = detector.run(img_RGB, 1, CUT_OFF)    #矩形, スコア, サブ検出器の結果を返す
         return rects, scores, types
     
-    def landmark_maker(img_cv2,rects):
-        tmp_img = img_cv2.copy()
+    def landmark_maker(self,img_cv2,rects):
+        tmp_img = copy.deepcopy(img_cv2)
         for i, rect in enumerate(rects):    #rectsの中身をイテレート
             top, bottom, left, right = rect.top(), rect.bottom(), rect.left(), rect.right()
             cv2.rectangle(tmp_img, (left, top), (right, bottom), (0, 255, 0))
 
-        tmp_img_RGB = cv2.cvtColor(tmp_img, cv2.COLOR_BGR2RGB)
+        #tmp_img_RGB = cv2.cvtColor(tmp_img, cv2.COLOR_BGR2RGB)
 
         dlib_path = R"C:\Users\class\Desktop\images\shape_predictor_68_face_landmarks.dat"
         predictor = dlib.shape_predictor(dlib_path)
@@ -64,7 +82,9 @@ class Recognition:
             cv2.circle(tmp_img, point, 2, (255, 0, 255), thickness=-1)
         return landmark
     
-    def cut_out_eye_img(img_cv2, eye_points):
+    """不使用ここから
+    
+    def cut_out_eye_img(self,img_cv2, eye_points):
         height, width = img_cv2.shape[:2]
         x_list = []
         y_list = []
@@ -78,9 +98,9 @@ class Recognition:
         eye_img = img_cv2[y_min : y_max, x_min : x_max]
         return eye_img, x_min, x_max, y_min, y_max
     
-    def eye_recognition(landmark,eye_img,x_min,y_min,boo):
+    def eye_recognition(self,landmark,eye_img,x_min,y_min,boo):
         # 表示確認(右目のみ)
-        eye_img_copy = eye_img.copy()
+        eye_img_copy = copy.deepcopy(eye_img)
         landmark_local = []
         for point in landmark[36:42]:
             point_local = (point[0] - x_min, point[1] - y_min)
@@ -91,7 +111,7 @@ class Recognition:
                 plt.show()
         return landmark_local
                 
-    def iris_recognition(landmark_local,tmp_binarizationed):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
+    def iris_recognition(self,landmark_local,tmp_binarizationed):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
         aaa = np.array(landmark_local[1])
         bbb = np.array(landmark_local[4])
         ccc = np.array(landmark_local[2])
@@ -107,3 +127,34 @@ class Recognition:
             a.append(b)
         max_index = np.argmax(a)
         return circles[0][max_index][0], circles[0][max_index][1], circles[0][max_index][2]
+    
+    不使用ここまで"""
+    
+    def iris(self , landmark , img_RGB):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
+        x_list=[]
+        y_list=[]
+        for point in landmark[37:42]:
+            if point != landmark[39]:
+                x_list.append(point[0])
+                y_list.append(point[1])
+        x_min = min(x_list)
+        x_max = max(x_list)
+        y_min = min(y_list)
+        y_max = max(y_list)
+        img_RGB_re = img_RGB[y_min : y_max, x_min : x_max]
+        return img_RGB_re
+    
+    def iris_color(self,img_RGB_re):
+        img_HSV_re = cv2.cvtColor(img_RGB_re , cv2.COLOR_RGB2HSV)
+        HSV_array = np.array(img_HSV_re)
+        HSV_list=[]
+        for x in HSV_array:
+            for y in x:
+                HSV_list.append(int(y[0]))
+        return HSV_list
+    
+    def HSV_mode(self,HSV_list):
+        count = np.bincount(HSV_list)
+        mode = np.argmax(count)
+        print(mode)
+        return mode
