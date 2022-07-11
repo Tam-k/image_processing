@@ -13,6 +13,19 @@ class Image:
         img_RGB = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
         return (img_cv2,img_gry,img_RGB)
     
+    def resize(self,img):
+        resize = 1000   #縦もしくは横の最大値にしたい数値
+        height, width = img.shape[:2]
+        max_xy = max(height, width)
+        max_xy_copy = copy.deepcopy(max_xy)
+        reduced_scale = resize / max_xy_copy    #縮尺
+        height_re = int(height*reduced_scale)
+        width_re = int(width*reduced_scale)
+        print(height,width)
+        print(height_re,width_re)
+        img_resized = cv2.resize(img , dsize=(width_re,height_re))
+        return img_resized
+    
     def binarization(self,img_gray):
         #大津の二値化
         #ret, tmp_binarizationed = cv2.threshold(img_gray, 200, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
@@ -144,17 +157,43 @@ class Recognition:
         img_RGB_re = img_RGB[y_min : y_max, x_min : x_max]
         return img_RGB_re
     
-    def iris_color(self,img_RGB_re):
+    def color(self,img_RGB_re):
         img_HSV_re = cv2.cvtColor(img_RGB_re , cv2.COLOR_RGB2HSV)
         HSV_array = np.array(img_HSV_re)
-        HSV_list=[]
+        H_list = []
+        S_list = []
+        V_list = []
         for x in HSV_array:
             for y in x:
-                HSV_list.append(int(y[0]))
-        return HSV_list
+                H_list.append(int(y[0]))
+                S_list.append(int(y[1]))
+                V_list.append(int(y[2]))
+        return H_list,S_list,V_list
     
     def HSV_mode(self,HSV_list):
         count = np.bincount(HSV_list)
         mode = np.argmax(count)
         print(mode)
         return mode
+    
+    def skin(self , landmark , img_cv2):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
+        x_list=[]
+        y_list=[]
+        x2_list=[]
+        y2_list=[]
+        x_list.append(landmark[1][0])
+        y_list.append(landmark[1][1])
+        x_list.append(landmark[2][0])
+        y_list.append(landmark[2][1])
+        x2_list.append(landmark[14][0])
+        y2_list.append(landmark[14][1])
+        x2_list.append(landmark[15][0])
+        y2_list.append(landmark[15][1])
+        x_min = max(x_list)
+        x_max = min(x2_list)
+        y_min = max(min(y_list) , min(y2_list))
+        y_max = min(max(y_list) , max(y2_list))
+        img_skin = img_cv2[y_min : y_max, x_min : x_max]
+        return img_skin
+    
+    
