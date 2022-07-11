@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 import ImageProcessing
 
-image_path = R"C:\Users\class\Desktop\images\i1.jpg"
+image_path = R"C:\Users\class\Desktop\images\i3.jpg"
 
 image = ImageProcessing.Image(image_path)
 recog = ImageProcessing.Recognition()
@@ -25,21 +25,15 @@ landmark = recog.landmark_maker(img_resized,rects)
 
 img_resized_iris = recog.iris(landmark , img_resized)
 H_list,S_list,V_list ,HSV_array= recog.color(img_resized_iris)
-#print(H_list)
-#print(V_list)
-print(np.shape(H_list))
-print(np.shape(S_list))
-print(np.shape(V_list))
 #print(HSV_array)
 H_list_re=copy.deepcopy(H_list)
 S_list_re=copy.deepcopy(S_list)
 V_list_re=copy.deepcopy(V_list)
 H_list_re,S_list_re,V_list_re = image.V_cutter(H_list_re,S_list_re,V_list_re)
-print(np.shape(H_list_re))
-print(np.shape(S_list_re))
-print(np.shape(V_list_re))
 print(V_list)
 print(V_list_re)
+print(np.shape(V_list))
+print(np.shape(V_list_re))
 #mode = recog.HSV_mode()
 
 #img_RGB_array = image.color_acquisition(img_RGB_re)
