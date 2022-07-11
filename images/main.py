@@ -23,18 +23,23 @@ landmark = recog.landmark_maker(img_resized,rects)
 
 #x,y,radians = recog.iris_recognition()
 
-img_RGB_re = recog.iris(landmark , img_RGB)
-H_list,S_list,V_list = recog.color(img_RGB_re)
-print(H_list)
-print(V_list)
-#print(np.shape(H_list))
-
+img_resized_iris = recog.iris(landmark , img_resized)
+H_list,S_list,V_list ,HSV_array= recog.color(img_resized_iris)
+#print(H_list)
+#print(V_list)
+print(np.shape(V_list))
+#print(HSV_array)
+H_list_re=copy.deepcopy(H_list)
+S_list_re=copy.deepcopy(S_list)
+V_list_re=copy.deepcopy(V_list)
+H_list_re,S_list_re,V_list_re = image.V_cutter(H_list_re,S_list_re,V_list_re)
+print(np.shape(V_list_re))
 #mode = recog.HSV_mode()
 
 #img_RGB_array = image.color_acquisition(img_RGB_re)
 
 img_skin = recog.skin(landmark , img_resized)
-H_list,S_list,V_list = recog.color(img_skin)
+skin_H_list,skin_S_list,skin_V_list ,skin_HSV_array = recog.color(img_skin)
 #print(H_list,S_list,V_list)
 
 

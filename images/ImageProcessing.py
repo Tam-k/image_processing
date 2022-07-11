@@ -37,7 +37,7 @@ class Image:
         return tmp_binarizationed
     
     def color_acquisition(self, img_RGB):   #img_RGBarray[y][x][RGBの配列]
-        img_RGB_array = np.asarray(img_RGB)
+        img_RGB_array = np.array(img_RGB)
         print(np.shape(img_RGB_array))
         return img_RGB_array
     
@@ -46,15 +46,25 @@ class Image:
         for point in img_RGB_array:
             print(point)
     
+    def V_cutter(self,H_list_re,S_list_re,V_list_re):
+        i=0
+        for point in V_list_re:
+            if point <= 20:
+                del H_list_re[i]
+                del S_list_re[i]
+                del V_list_re[i]
+            i+=1
+        return H_list_re,S_list_re,V_list_re
+    
     def image_display(self,img):
         plt.imshow(img)
         plt.show()
     
-    #def image_save(self,img):
-    #    plt.imshow(img)
-    #    plt.axis('tight')
-    #    plt.axis("off")
-    #    plt.savefig("img.jpg")
+    def save(self,img):
+        plt.imshow(img)
+        plt.axis('tight')
+        plt.axis("off")
+        plt.savefig("img.jpg")
     
     
     
@@ -143,7 +153,7 @@ class Recognition:
     
     不使用ここまで"""
     
-    def iris(self , landmark , img_RGB):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
+    def iris(self , landmark , img_RGB):    #右目の虹彩取得
         x_list=[]
         y_list=[]
         for point in landmark[37:42]:
@@ -157,7 +167,7 @@ class Recognition:
         img_RGB_re = img_RGB[y_min : y_max, x_min : x_max]
         return img_RGB_re
     
-    def color(self,img_RGB_re):
+    def color(self,img_RGB_re): #色をHSV形式で取得
         img_HSV_re = cv2.cvtColor(img_RGB_re , cv2.COLOR_RGB2HSV)
         HSV_array = np.array(img_HSV_re)
         H_list = []
@@ -168,7 +178,7 @@ class Recognition:
                 H_list.append(int(y[0]))
                 S_list.append(int(y[1]))
                 V_list.append(int(y[2]))
-        return H_list,S_list,V_list
+        return H_list,S_list,V_list,HSV_array
     
     def HSV_mode(self,HSV_list):
         count = np.bincount(HSV_list)
@@ -176,7 +186,7 @@ class Recognition:
         print(mode)
         return mode
     
-    def skin(self , landmark , img_cv2):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
+    def skin(self , landmark , img_cv2):    #目の下当たりの画像取得
         x_list=[]
         y_list=[]
         x2_list=[]
