@@ -1,0 +1,12 @@
+pip install cmake
+pip install dlib
+
+無理な場合、
+vscode 2022版 (https://visualstudio.microsoft.com/ja/vs/)
+をダウンロード、インストーラでc++のコンパイラをダウンロード、
+そのままvscode2022のpythonパッケージをcondaにしてターミナルから
+pip install cmake
+pip install dlib
+を試す
+
+python version 3.4～3.6
