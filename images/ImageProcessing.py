@@ -46,14 +46,16 @@ class Image:
         for point in img_RGB_array:
             print(point)
     
-    def V_cutter(self,H_list_re,S_list_re,V_list_re):
-        i=0
-        for point in V_list_re:
-            if point <= 20:
-                del H_list_re[i]
-                del S_list_re[i]
-                del V_list_re[i]
-            i+=1
+    def V_cutter(self,H_list,S_list,V_list):
+        H_list_re=[]
+        S_list_re=[]
+        V_list_re=[]
+        for point in V_list:
+            print(point)
+            if point > 20:
+                H_list_re[point]
+                S_list_re[point]
+                V_list_re[point]
         return H_list_re,S_list_re,V_list_re
     
     def image_display(self,img):
