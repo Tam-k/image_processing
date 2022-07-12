@@ -3,6 +3,9 @@ import dlib
 import numpy as np
 from matplotlib import pyplot as plt
 import copy
+
+from sqlalchemy import null
+
 class Image:
     def __init__(self,image_path):
         self.image_path=image_path
@@ -41,12 +44,7 @@ class Image:
         print(np.shape(img_RGB_array))
         return img_RGB_array
     
-    def RGB2HSV(self,img_RGB_array):
-        img_HSV_array = [[[]]]
-        for point in img_RGB_array:
-            print(point)
-    
-    def V_cutter(self,H_list,S_list,V_list):    #Vが20以下を切り捨て
+    def V_cutter(self,H_list,S_list,V_list):    #Vが20以下を切り捨て 肌用
         H_list_re=[]
         S_list_re=[]
         V_list_re=[]
@@ -59,10 +57,31 @@ class Image:
             i+=1
         return H_list_re,S_list_re,V_list_re
     
+    def H_classification(self,H_list_re):   #Hの色分け
+        H_cla=[]
+        for point in H_list_re:
+            point-=15
+            if point<0:
+                point+=180
+            H_cla.append(point//30)
+        return H_cla
+    
+    def H_mode(self,H_list):    #最頻値
+        count = np.bincount(H_list)
+        print(count)
+        mode = np.argmax(count)
+        return mode
+    
+    def coordinate_HSV(self,img,x,y):
+        H,S,V = img[y,x]
+        return H,S,V
+    
+    #画像出力用(テスト用)
     def image_display(self,img):
         plt.imshow(img)
         plt.show()
     
+    #画像保存用(テスト用)
     def save(self,img):
         plt.imshow(img)
         plt.axis('tight')
@@ -92,12 +111,6 @@ class Recognition:
     
     def landmark_maker(self,img_cv2,rects):
         tmp_img = copy.deepcopy(img_cv2)
-        for i, rect in enumerate(rects):    #rectsの中身をイテレート
-            top, bottom, left, right = rect.top(), rect.bottom(), rect.left(), rect.right()
-            cv2.rectangle(tmp_img, (left, top), (right, bottom), (0, 255, 0))
-
-        #tmp_img_RGB = cv2.cvtColor(tmp_img, cv2.COLOR_BGR2RGB)
-
         dlib_path = R"C:\Users\class\Desktop\images\shape_predictor_68_face_landmarks.dat"
         predictor = dlib.shape_predictor(dlib_path)
         shape = predictor(img_cv2, rects[0])
@@ -108,7 +121,7 @@ class Recognition:
             cv2.circle(tmp_img, point, 2, (255, 0, 255), thickness=-1)
         return landmark
     
-    """不使用ここから
+    #不使用ここから
     
     def cut_out_eye_img(self,img_cv2, eye_points):
         height, width = img_cv2.shape[:2]
@@ -123,7 +136,7 @@ class Recognition:
         y_max = min(max(y_list) + 4, height)
         eye_img = img_cv2[y_min : y_max, x_min : x_max]
         return eye_img, x_min, x_max, y_min, y_max
-    
+
     def eye_recognition(self,landmark,eye_img,x_min,y_min,boo):
         # 表示確認(右目のみ)
         eye_img_copy = copy.deepcopy(eye_img)
@@ -136,7 +149,7 @@ class Recognition:
                 plt.imshow(eye_img_copy)
                 plt.show()
         return landmark_local
-                
+    """     
     def iris_recognition(self,landmark_local,tmp_binarizationed):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
         aaa = np.array(landmark_local[1])
         bbb = np.array(landmark_local[4])
@@ -156,7 +169,7 @@ class Recognition:
     
     不使用ここまで"""
     
-    def iris(self , landmark , img_RGB):    #右目の虹彩取得
+    def dark_eyed(self , landmark , img_RGB):    #右目の黒目取得
         x_list=[]
         y_list=[]
         for point in landmark[37:42]:
@@ -167,8 +180,51 @@ class Recognition:
         x_max = max(x_list)
         y_min = min(y_list)
         y_max = max(y_list)
-        img_RGB_re = img_RGB[y_min : y_max, x_min : x_max]
-        return img_RGB_re
+        img_dark_eyed = img_RGB[y_min : y_max, x_min : x_max]
+        return img_dark_eyed
+    
+    def dark_eyed_color(self,img_dark_eyed,H_list,H_list_re,V_list_re):   #Vが20以下の割合によって処理を変える
+        len_persent = len(H_list_re)/len(H_list)
+        if len_persent <= 0.40:                                 #虹彩と瞳孔がはっきり分かれているとき
+            H_cla = Image.H_classification(H_list_re)           #(V20以下)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
+            mode = Image.H_mode(H_cla)
+            return mode
+        else:                                                   #虹彩と瞳孔がはっきり分かれていないとき
+            #Vの切り抜き処理書く
+            H_cla = Image.H_classification(H_list_re)           #(V20以下,100以上)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
+            mode = Image.H_mode(H_cla)
+            return mode
+            
+    
+    def white_eyed(self , landmark):    #右目の白目取得
+        x_list=[]
+        y_list=[]
+        x_2_list=[]
+        y_2_list=[]
+        x_list.append(landmark[36][0])
+        y_list.append(landmark[36][1])
+        x_list.append(landmark[37][0])
+        y_list.append(landmark[37][1])
+        x_list.append(landmark[41][0])
+        y_list.append(landmark[41][1])
+        x_2_list.append(landmark[38][0])
+        y_2_list.append(landmark[38][1])
+        x_2_list.append(landmark[39][0])
+        y_2_list.append(landmark[39][1])
+        x_2_list.append(landmark[40][0])
+        y_2_list.append(landmark[40][1])
+        x=int((x_list[0]+(x_list[1]+x_list[2])/2)/2)
+        y=int((y_list[0]+y_list[1]+y_list[2])/3)
+        x_2=int((x_2_list[1]+(x_2_list[0]+x_2_list[2])/2)/2)
+        y_2=int((y_2_list[0]+y_2_list[1]+y_2_list[2])/3)
+        return x,y,x_2,y_2
+    
+    def white_eye_color(self,img_RGB,x,y,x_2,y_2):
+        img_HSV = cv2.cvtColor(img_RGB, cv2.COLOR_RGB2HSV)
+        HSV_array = np.array(img_HSV)
+        HSV_1 = HSV_array[y][x]
+        HSV_2 = HSV_array[y_2][x_2]
+        return HSV_1,HSV_2
     
     def color(self,img_RGB_re): #色をHSV形式で取得
         img_HSV_re = cv2.cvtColor(img_RGB_re , cv2.COLOR_RGB2HSV)
@@ -182,12 +238,6 @@ class Recognition:
                 S_list.append(int(y[1]))
                 V_list.append(int(y[2]))
         return H_list,S_list,V_list,HSV_array
-    
-    def HSV_mode(self,HSV_list):
-        count = np.bincount(HSV_list)
-        mode = np.argmax(count)
-        print(mode)
-        return mode
     
     def skin(self , landmark , img_cv2):    #目の下当たりの画像取得
         x_list=[]
