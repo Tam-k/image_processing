@@ -41,8 +41,9 @@ V_list_re=copy.deepcopy(V_list)
 print(S_list)
 H_list_re,S_list_re,V_list_re = image.V_cutter(H_list_re,S_list_re,V_list_re)
 image.image_display(img_resized_iris)
-mode = recog.dark_eyed_color(img_resized_iris,H_list,H_list_re,V_list_re)
-print(mode)
+#これ改変必須
+#mode = recog.dark_eyed_color(img_resized_iris,H_list,H_list_re,V_list_re)
+#print(mode)
 
 #img_RGB_array = image.color_acquisition(img_RGB_re)
 
