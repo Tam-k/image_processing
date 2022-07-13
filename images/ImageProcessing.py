@@ -57,9 +57,9 @@ class Image:
             i+=1
         return H_list_re,S_list_re,V_list_re
     
-    def H_classification(self,H_list_re):   #Hの色分け
+    def H_classification(self,H_list):   #Hの色分け
         H_cla=[]
-        for point in H_list_re:
+        for point in H_list:
             point-=15
             if point<0:
                 point+=180
@@ -95,12 +95,14 @@ class Recognition:
         pass
     
     # dlibの座標の出力形式を(x, y)のタプル形式に変換する
-    def part_to_coordinates(part):
+    def part_to_coordinates(self,part):
         return (part.x, part.y)
-    def shape_to_landmark(shape):
+    def shape_to_landmark(self,shape):
         landmark = []
+        rec=Recognition()
         for i in range(shape.num_parts):
-            landmark.append(Recognition.part_to_coordinates(shape.part(i)))
+            landmark.append(rec.part_to_coordinates(shape.part(i)))
+        del rec
         return landmark
     
     def face_recognition(self,img_RGB):
@@ -116,7 +118,9 @@ class Recognition:
         shape = predictor(img_cv2, rects[0])
 
         # 検出したshapeをlandmark（x,y座標のリスト）に変換
-        landmark = Recognition.shape_to_landmark(shape)
+        rec=Recognition()
+        landmark = rec.shape_to_landmark(shape)
+        del rec
         for point in landmark:
             cv2.circle(tmp_img, point, 2, (255, 0, 255), thickness=-1)
         return landmark
@@ -183,16 +187,40 @@ class Recognition:
         img_dark_eyed = img_RGB[y_min : y_max, x_min : x_max]
         return img_dark_eyed
     
-    def dark_eyed_color(self,img_dark_eyed,H_list,H_list_re,V_list_re):   #Vが20以下の割合によって処理を変える
-        len_persent = len(H_list_re)/len(H_list)
+    def dark_eyed_color(self,img_dark_eyed,H_list,S_list,V_list):   #Vが20以下の割合によって処理を変える
+        H_list_O20=[]
+        S_list_O20=[]
+        V_list_O20=[]
+        i=0
+        for point in V_list:
+            if point > 20:
+                H_list_O20.append(H_list[i])
+                S_list_O20.append(S_list[i])
+                V_list_O20.append(V_list[i])
+            i+=1
+        len_persent = len(H_list_O20)/len(H_list)
         if len_persent <= 0.40:                                 #虹彩と瞳孔がはっきり分かれているとき
-            H_cla = Image.H_classification(H_list_re)           #(V20以下)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
-            mode = Image.H_mode(H_cla)
+            image=Image(image_path=R"C:\Users\class\Desktop\images\i1.jpg")
+            H_cla = image.H_classification(H_list_O20)           #(V20以下)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
+            mode = image.H_mode(H_cla)
+            del image
             return mode
         else:                                                   #虹彩と瞳孔がはっきり分かれていないとき
-            #Vの切り抜き処理書く
-            H_cla = Image.H_classification(H_list_re)           #(V20以下,100以上)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
-            mode = Image.H_mode(H_cla)
+            H_list_O20U100=[]
+            S_list_O20U100=[]
+            V_list_O20U100=[]
+            i=0
+            for point in V_list_O20:
+                print(point)
+                if point < 100:
+                    H_list_O20U100.append(H_list_O20[i])
+                    S_list_O20U100.append(S_list_O20[i])
+                    V_list_O20U100.append(V_list_O20[i])
+                i+=1
+            image=Image(image_path=R"C:\Users\class\Desktop\images\i1.jpg")
+            H_cla = image.H_classification(H_list_O20U100)           #(V20以下,100以上)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
+            mode = image.H_mode(H_cla)
+            del image
             return mode
             
     
