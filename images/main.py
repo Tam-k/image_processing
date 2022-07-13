@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 import ImageProcessing
 
-image_path = R"C:\Users\class\Desktop\images\i1.jpg"
+image_path = R"C:\Users\class\Desktop\images\i14.jpg"
 
 #別ファイルのクラスのインスタンス化
 image = ImageProcessing.Image(image_path)
@@ -14,8 +14,8 @@ recog = ImageProcessing.Recognition()
 
 #画像の読み込み、リサイズ：読込方法要検討、リサイズも場所変える？
 img_cv2 , img_gray , img_RGB = image.loading()
-img_resized = image.resize(img_RGB)
-
+img_resized = image.resize(img_RGB , 1000)  #縦横の最大値
+#image.image_display(img_RGB)
 #顔の位置を見てランドマーク作成
 rects, scores, types = recog.face_recognition(img_resized)
 landmark = recog.landmark_maker(img_resized,rects)
@@ -29,8 +29,26 @@ landmark_local = recog.eye_recognition(landmark,eye_img,x_min,y_min,True)  #瞳�
 #肌色取得処理
 img_skin = recog.skin(landmark , img_resized)
 skin_H_list,skin_S_list,skin_V_list ,skin_HSV_array = recog.color(img_skin)
-
-
+skin_H_list_O100=[]
+skin_S_list_O100=[]
+skin_V_list_O100=[]
+i=0
+for point in skin_V_list:
+    if point > 100:
+        skin_H_list_O100.append(skin_H_list[i])
+        skin_S_list_O100.append(skin_S_list[i])
+        skin_V_list_O100.append(skin_V_list[i])
+    i+=1
+skin_S_mode = image.mode_5(skin_S_list_O100)
+skin_V_mode = image.mode_5(skin_V_list_O100)
+skin_H_mode = image.mode_5(skin_H_list_O100)
+skin_S_mode_mean = sum(skin_S_mode)/5
+skin_V_mode_mean = sum(skin_V_mode)/5
+skin_H_mode_mean = sum(skin_H_mode)/5
+skin_S_mean = np.mean(skin_S_list_O100)
+print(skin_H_mode_mean,skin_S_mode_mean,skin_V_mode_mean)
+#print(skin_S_mean)
+image.image_display(img_skin)
 
 
 #白日(書き換えほとんど終わり)
@@ -50,7 +68,7 @@ S_list_re=copy.deepcopy(S_list)
 V_list_re=copy.deepcopy(V_list)
 H_list_re,S_list_re,V_list_re = image.V_cutter(H_list_re,S_list_re,V_list_re)
 #image.image_display(img_resized_iris)
-mode = recog.dark_eyed_color(img_resized_iris,H_list,S_list,V_list)
+#mode = recog.dark_eyed_color(img_resized_iris,H_list,S_list,V_list)
 #print(mode)
 
 #img_RGB_array = image.color_acquisition(img_RGB_re)

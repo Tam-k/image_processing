@@ -16,8 +16,7 @@ class Image:
         img_RGB = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
         return (img_cv2,img_gry,img_RGB)
     
-    def resize(self,img):
-        resize = 1000   #縦もしくは横の最大値にしたい数値
+    def resize(self,img,resize):    #縦もしくは横の最大値にしたい数値
         height, width = img.shape[:2]
         max_xy = max(height, width)
         max_xy_copy = copy.deepcopy(max_xy)
@@ -66,10 +65,19 @@ class Image:
             H_cla.append(point//30)
         return H_cla
     
-    def H_mode(self,H_list):    #最頻値
-        count = np.bincount(H_list)
+    def mode(self,list):    #最頻値
+        count = np.bincount(list)
         print(count)
         mode = np.argmax(count)
+        return mode
+    
+    def mode_5(self,list):
+        mode = []
+        count = np.bincount(list)
+        for i in range(5):
+            #print(count)
+            mode.append(np.argmax(count))
+            count[np.argmax(count)]=0
         return mode
     
     def coordinate_HSV(self,img,x,y):
@@ -202,7 +210,7 @@ class Recognition:
         if len_persent <= 0.40:                                 #虹彩と瞳孔がはっきり分かれているとき
             image=Image(image_path=R"C:\Users\class\Desktop\images\i1.jpg")
             H_cla = image.H_classification(H_list_O20)           #(V20以下)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
-            mode = image.H_mode(H_cla)
+            mode = image.mode_5(H_cla)
             del image
             return mode
         else:                                                   #虹彩と瞳孔がはっきり分かれていないとき
@@ -219,7 +227,7 @@ class Recognition:
                 i+=1
             image=Image(image_path=R"C:\Users\class\Desktop\images\i1.jpg")
             H_cla = image.H_classification(H_list_O20U100)           #(V20以下,100以上)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
-            mode = image.H_mode(H_cla)
+            mode = image.mode_5(H_cla)
             del image
             return mode
             
