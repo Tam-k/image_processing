@@ -23,8 +23,8 @@ class Image:
         reduced_scale = resize / max_xy_copy    #縮尺
         height_re = int(height*reduced_scale)
         width_re = int(width*reduced_scale)
-        print(height,width)
-        print(height_re,width_re)
+        #print(height,width)
+        #print(height_re,width_re)
         img_resized = cv2.resize(img , dsize=(width_re,height_re))
         return img_resized
     
@@ -37,11 +37,6 @@ class Image:
         #適応的閾値処理
         #tmp_binarizationed = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 39, 2)
         return tmp_binarizationed
-    
-    def color_acquisition(self, img_RGB):   #img_RGBarray[y][x][RGBの配列]
-        img_RGB_array = np.array(img_RGB)
-        print(np.shape(img_RGB_array))
-        return img_RGB_array
     
     def V_cutter(self,H_list,S_list,V_list):    #Vが20以下を切り捨て 肌用
         H_list_re=[]
@@ -65,16 +60,10 @@ class Image:
             H_cla.append(point//30)
         return H_cla
     
-    def mode(self,list):    #最頻値
-        count = np.bincount(list)
-        print(count)
-        mode = np.argmax(count)
-        return mode
-    
-    def mode_5(self,list):
+    def mode(self,list,suji):
         mode = []
         count = np.bincount(list)
-        for i in range(5):
+        for i in range(suji):
             #print(count)
             mode.append(np.argmax(count))
             count[np.argmax(count)]=0
@@ -195,7 +184,7 @@ class Recognition:
         img_dark_eyed = img_RGB[y_min : y_max, x_min : x_max]
         return img_dark_eyed
     
-    def dark_eyed_color(self,img_dark_eyed,H_list,S_list,V_list):   #Vが20以下の割合によって処理を変える
+    def dark_eyed_color(self,H_list,S_list,V_list):   #Vが20以下の割合によって処理を変える
         H_list_O20=[]
         S_list_O20=[]
         V_list_O20=[]
@@ -208,29 +197,20 @@ class Recognition:
             i+=1
         len_persent = len(H_list_O20)/len(H_list)
         if len_persent <= 0.40:                                 #虹彩と瞳孔がはっきり分かれているとき
-            image=Image(image_path=R"C:\Users\class\Desktop\images\i1.jpg")
-            H_cla = image.H_classification(H_list_O20)           #(V20以下)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
-            mode = image.mode_5(H_cla)
-            del image
-            return mode
+            return H_list_O20,S_list_O20,V_list_O20             #Vが20より大きい座標のHSVをそれぞれ返す
         else:                                                   #虹彩と瞳孔がはっきり分かれていないとき
             H_list_O20U100=[]
             S_list_O20U100=[]
             V_list_O20U100=[]
             i=0
             for point in V_list_O20:
-                print(point)
+                #print(point)
                 if point < 100:
                     H_list_O20U100.append(H_list_O20[i])
                     S_list_O20U100.append(S_list_O20[i])
                     V_list_O20U100.append(V_list_O20[i])
                 i+=1
-            image=Image(image_path=R"C:\Users\class\Desktop\images\i1.jpg")
-            H_cla = image.H_classification(H_list_O20U100)           #(V20以下,100以上)以外のHの最頻値を取得、0黄,1緑,2水,3青,4紫,5赤
-            mode = image.mode_5(H_cla)
-            del image
-            return mode
-            
+            return H_list_O20U100,S_list_O20U100,V_list_O20U100 #Vが20より大きく、100未満の座標のHSVをそれぞれ返す
     
     def white_eyed(self , landmark):    #右目の白目取得
         x_list=[]
@@ -295,4 +275,27 @@ class Recognition:
         img_skin = img_cv2[y_min : y_max, x_min : x_max]
         return img_skin
     
+    def skin_identification(self,skin_H_list,skin_S_list,skin_V_list):
+        skin_H_list_O100=[]
+        skin_S_list_O100=[]
+        skin_V_list_O100=[]
+        i=0
+        for point in skin_V_list:
+            if point > 100:
+                skin_H_list_O100.append(skin_H_list[i])
+                skin_S_list_O100.append(skin_S_list[i])
+                skin_V_list_O100.append(skin_V_list[i])
+            i+=1
+        image = Image(R"C:\Users\class\Desktop\images\i14.jpg")
+        skin_S_mode = image.mode(skin_S_list_O100,5)
+        skin_V_mode = image.mode(skin_V_list_O100,5)
+        skin_H_mode = image.mode(skin_H_list_O100,5)
+        skin_S_mode_mean = sum(skin_S_mode)/5
+        skin_V_mode_mean = sum(skin_V_mode)/5
+        skin_H_mode_mean = sum(skin_H_mode)/5
+        skin_S_mean = np.mean(skin_S_list_O100)
+        return skin_S_mode_mean
     
+    def eye_identification(self,white_eye_V,black_eye_V):
+        contrast = white_eye_V - black_eye_V
+        return contrast

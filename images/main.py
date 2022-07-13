@@ -29,50 +29,24 @@ landmark_local = recog.eye_recognition(landmark,eye_img,x_min,y_min,True)  #瞳�
 #肌色取得処理
 img_skin = recog.skin(landmark , img_resized)
 skin_H_list,skin_S_list,skin_V_list ,skin_HSV_array = recog.color(img_skin)
-skin_H_list_O100=[]
-skin_S_list_O100=[]
-skin_V_list_O100=[]
-i=0
-for point in skin_V_list:
-    if point > 100:
-        skin_H_list_O100.append(skin_H_list[i])
-        skin_S_list_O100.append(skin_S_list[i])
-        skin_V_list_O100.append(skin_V_list[i])
-    i+=1
-skin_S_mode = image.mode_5(skin_S_list_O100)
-skin_V_mode = image.mode_5(skin_V_list_O100)
-skin_H_mode = image.mode_5(skin_H_list_O100)
-skin_S_mode_mean = sum(skin_S_mode)/5
-skin_V_mode_mean = sum(skin_V_mode)/5
-skin_H_mode_mean = sum(skin_H_mode)/5
-skin_S_mean = np.mean(skin_S_list_O100)
-print(skin_H_mode_mean,skin_S_mode_mean,skin_V_mode_mean)
+skin_S_mode_mean = recog.skin_identification(skin_H_list,skin_S_list,skin_V_list)
+print(int(skin_S_mode_mean))
 #print(skin_S_mean)
-image.image_display(img_skin)
+#image.image_display(img_skin)
 
 
-#白日(書き換えほとんど終わり)
+#白日(書き換え多分終わり)
 img_resized_iris = recog.dark_eyed(landmark , img_resized)
 x,y,x_2,y_2 = recog.white_eyed(landmark)
 HSV_1,HSV_2 = recog.white_eye_color(img_resized,x,y,x_2,y_2)
-""" cv2.circle(img_resized, (x,y), 1, (255, 0, 255), thickness=-1)
-cv2.circle(img_resized, (x_2,y_2), 1, (255, 0, 255), thickness=-1)
-plt.imshow(img_resized)
-plt.show()
-image.save(img_resized)"""
-
-#黒目(書き換え途中)
+white_eye_V = int(max(HSV_1[2],HSV_2[2]))
+#黒目(書き換え多分終わり)
 H_list,S_list,V_list ,HSV_array= recog.color(img_resized_iris)
-H_list_re=copy.deepcopy(H_list)
-S_list_re=copy.deepcopy(S_list)
-V_list_re=copy.deepcopy(V_list)
-H_list_re,S_list_re,V_list_re = image.V_cutter(H_list_re,S_list_re,V_list_re)
-#image.image_display(img_resized_iris)
-#mode = recog.dark_eyed_color(img_resized_iris,H_list,S_list,V_list)
-#print(mode)
+H_list_re,S_list_re,V_list_re = recog.dark_eyed_color(H_list,S_list,V_list)
+black_eye_V = int(np.mean(V_list_re))
 
-#img_RGB_array = image.color_acquisition(img_RGB_re)
-
+contrast = recog.eye_identification(white_eye_V,black_eye_V)
+print(contrast)
 
 #img_resized_copy = copy.deepcopy(img_resized)
 """ for point in landmark:  #検出の座標確認用
