@@ -190,13 +190,13 @@ class Recognition:
         V_list_O20=[]
         i=0
         for point in V_list:
-            if point > 20:
+            if point > 30:
                 H_list_O20.append(H_list[i])
                 S_list_O20.append(S_list[i])
                 V_list_O20.append(V_list[i])
             i+=1
         len_persent = len(H_list_O20)/len(H_list)
-        if len_persent <= 0.40:                                 #虹彩と瞳孔がはっきり分かれているとき
+        if len_persent >= 0.40:                                 #虹彩と瞳孔がはっきり分かれているとき
             return H_list_O20,S_list_O20,V_list_O20             #Vが20より大きい座標のHSVをそれぞれ返す
         else:                                                   #虹彩と瞳孔がはっきり分かれていないとき
             H_list_O20U100=[]
@@ -294,8 +294,8 @@ class Recognition:
         skin_V_mode_mean = sum(skin_V_mode)/5
         skin_H_mode_mean = sum(skin_H_mode)/5
         skin_S_mean = np.mean(skin_S_list_O100)
-        return skin_S_mode_mean
+        return int(skin_S_mode_mean)
     
     def eye_identification(self,white_eye_V,black_eye_V):
         contrast = white_eye_V - black_eye_V
-        return contrast
+        return int(contrast)
