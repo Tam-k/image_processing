@@ -50,9 +50,16 @@ print(black_eye_V)
 contrast = recog.eye_identification(white_eye_V,black_eye_V)
 print("瞳 V = "+ str(contrast))
 
+img_iris_gray = cv2.cvtColor(eye_img, cv2.COLOR_RGB2GRAY)
+
+
+
+
+
+
 #img_resized_copy = copy.deepcopy(img_resized)
 """ for point in landmark:  #検出の座標確認用
     cv2.circle(img_resized_copy, point, 5, (255, 0, 255), thickness=-1)
 plt.imshow(img_resized_copy)
 plt.show() """
-image.image_display(eye_img)   #画像表示用
+#image.image_display(eye_img)   #画像表示用
