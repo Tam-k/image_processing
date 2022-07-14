@@ -28,28 +28,7 @@ class Image:
         img_resized = cv2.resize(img , dsize=(width_re,height_re))
         return img_resized
     
-    def binarization(self,img_gray):
-        #大津の二値化
-        #ret, tmp_binarizationed = cv2.threshold(img_gray, 200, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        #tmp_binarizationed = cv2.bitwise_not(img_gray) #白黒反転
-        #Canny法の二値化
-        tmp_binarizationed = cv2.Canny(img_gray,160,160)
-        #適応的閾値処理
-        #tmp_binarizationed = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 39, 2)
-        return tmp_binarizationed
     
-    def V_cutter(self,H_list,S_list,V_list):    #Vが20以下を切り捨て 肌用
-        H_list_re=[]
-        S_list_re=[]
-        V_list_re=[]
-        i=0
-        for point in V_list:
-            if point > 20:
-                H_list_re.append(H_list[i])
-                S_list_re.append(S_list[i])
-                V_list_re.append(V_list[i])
-            i+=1
-        return H_list_re,S_list_re,V_list_re
     
     def H_classification(self,H_list):   #Hの色分け
         H_cla=[]
@@ -68,10 +47,6 @@ class Image:
             mode.append(np.argmax(count))
             count[np.argmax(count)]=0
         return mode
-    
-    def coordinate_HSV(self,img,x,y):
-        H,S,V = img[y,x]
-        return H,S,V
     
     #画像出力用(テスト用)
     def image_display(self,img):
@@ -150,25 +125,7 @@ class Recognition:
                 plt.imshow(eye_img_copy)
                 plt.show()
         return landmark_local
-    """     
-    def iris_recognition(self,landmark_local,tmp_binarizationed):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
-        aaa = np.array(landmark_local[1])
-        bbb = np.array(landmark_local[4])
-        ccc = np.array(landmark_local[2])
-        ddd = np.array(landmark_local[5])
-        radius1 = (np.linalg.norm(aaa-bbb))/2
-        radius2 = (np.linalg.norm(ccc-ddd))/2
-        radius = int((radius1+radius2)/2)
-        circles = cv2.HoughCircles(tmp_binarizationed,cv2.HOUGH_GRADIENT,dp=1,minDist=1,param1=150,param2=20,minRadius=int(radius*0.6), maxRadius=int(radius*1.3))    #画質が荒い時はparam2を下げる(5)にするほうが検知がしやすそう
-        circles = np.uint16(np.around(circles)) #circlesの中身を整数値に丸めてキャスト
-        a=[]
-        for circle in circles[0, :]:
-            b=circle[2]
-            a.append(b)
-        max_index = np.argmax(a)
-        return circles[0][max_index][0], circles[0][max_index][1], circles[0][max_index][2]
     
-    不使用ここまで"""
     
     def dark_eyed(self , landmark , img_RGB):    #右目の黒目取得
         x_list=[]
@@ -204,7 +161,6 @@ class Recognition:
             V_list_O20U100=[]
             i=0
             for point in V_list_O20:
-                #print(point)
                 if point < 100:
                     H_list_O20U100.append(H_list_O20[i])
                     S_list_O20U100.append(S_list_O20[i])
@@ -275,27 +231,57 @@ class Recognition:
         img_skin = img_cv2[y_min : y_max, x_min : x_max]
         return img_skin
     
-    def skin_identification(self,skin_H_list,skin_S_list,skin_V_list):
-        skin_H_list_O100=[]
+    def skin_identification(self,skin_S_list,skin_V_list):  #肌結果出す用
+        #skin_H_list_O100=[]
         skin_S_list_O100=[]
-        skin_V_list_O100=[]
+        #skin_V_list_O100=[]
         i=0
         for point in skin_V_list:
             if point > 100:
-                skin_H_list_O100.append(skin_H_list[i])
+                #skin_H_list_O100.append(skin_H_list[i])
                 skin_S_list_O100.append(skin_S_list[i])
-                skin_V_list_O100.append(skin_V_list[i])
+                #skin_V_list_O100.append(skin_V_list[i])
             i+=1
         image = Image(R"C:\Users\class\Desktop\images\i14.jpg")
         skin_S_mode = image.mode(skin_S_list_O100,5)
-        skin_V_mode = image.mode(skin_V_list_O100,5)
-        skin_H_mode = image.mode(skin_H_list_O100,5)
+        #skin_V_mode = image.mode(skin_V_list_O100,5)
+        #skin_H_mode = image.mode(skin_H_list_O100,5)
         skin_S_mode_mean = sum(skin_S_mode)/5
-        skin_V_mode_mean = sum(skin_V_mode)/5
-        skin_H_mode_mean = sum(skin_H_mode)/5
-        skin_S_mean = np.mean(skin_S_list_O100)
+        #skin_V_mode_mean = sum(skin_V_mode)/5
+        #skin_H_mode_mean = sum(skin_H_mode)/5
+        #skin_S_mean = np.mean(skin_S_list_O100)
         return int(skin_S_mode_mean)
     
     def eye_identification(self,white_eye_V,black_eye_V):
-        contrast = white_eye_V - black_eye_V
+        contrast = white_eye_V / black_eye_V
         return int(contrast)
+    
+    
+""" 作成したけど使わなかった残骸たち
+def binarization(self,img_gray):    #2値化まとめ
+    #大津の二値化
+    #ret, tmp_binarizationed = cv2.threshold(img_gray, 200, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    #tmp_binarizationed = cv2.bitwise_not(img_gray) #白黒反転
+    #Canny法の二値化
+    tmp_binarizationed = cv2.Canny(img_gray,160,160)
+    #適応的閾値処理
+    #tmp_binarizationed = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 39, 2)
+    return tmp_binarizationed
+        
+def iris_recognition(self,landmark_local,tmp_binarizationed):  #瞳周辺のランドマークの対角線の平均を出してその半分を円の半径と仮定してその円を探して描写する
+    aaa = np.array(landmark_local[1])
+    bbb = np.array(landmark_local[4])
+    ccc = np.array(landmark_local[2])
+    ddd = np.array(landmark_local[5])
+    radius1 = (np.linalg.norm(aaa-bbb))/2
+    radius2 = (np.linalg.norm(ccc-ddd))/2
+    radius = int((radius1+radius2)/2)
+    circles = cv2.HoughCircles(tmp_binarizationed,cv2.HOUGH_GRADIENT,dp=1,minDist=1,param1=150,param2=20,minRadius=int(radius*0.6), maxRadius=int(radius*1.3))    #画質が荒い時はparam2を下げる(5)にするほうが検知がしやすそう
+    circles = np.uint16(np.around(circles)) #circlesの中身を整数値に丸めてキャスト
+    a=[]
+    for circle in circles[0, :]:
+        b=circle[2]
+        a.append(b)
+    max_index = np.argmax(a)
+    return circles[0][max_index][0], circles[0][max_index][1], circles[0][max_index][2]
+"""
