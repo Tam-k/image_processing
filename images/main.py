@@ -6,7 +6,11 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 import ImageProcessing
 
-image_path = R"C:\Users\class\Desktop\images\i1.jpg"   # テスト用(変更必須)
+
+a=str(1)
+
+print(f"写真 = i{a}")
+image_path = R"C:\Users\class\Desktop\images\i"+a+".jpg"   # テスト用(変更必須)
 
 # 別ファイルのクラスのインスタンス化
 image = ImageProcessing.Image(image_path)
@@ -27,7 +31,7 @@ eye_img = recog.cut_out_eye_img(img_resized, landmark[36:42])   #, x_min, x_max,
 # 肌色取得処理
 img_skin = recog.skin(landmark , img_resized)
 skin_H_list,skin_S_list,skin_V_list = recog.color(img_skin)
-skin_S_mode_mean = recog.skin_identification(skin_S_list,skin_V_list)   # 肌結果出力用
+skin_S_mode_mean = recog.skin_identification(skin_S_list,skin_V_list,image_path)   # 肌結果出力用
 print(f"肌 S = {str(skin_S_mode_mean)}")
 
 

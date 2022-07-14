@@ -116,7 +116,6 @@ class Recognition:
                 plt.show()
         return landmark_local
     
-    
     def dark_eyed(self , landmark , img_RGB):    # 右目の黒目取得
         x_list=[]
         y_list=[]
@@ -221,7 +220,7 @@ class Recognition:
         img_skin = img_cv2[y_min : y_max, x_min : x_max]
         return img_skin
     
-    def skin_identification(self,skin_S_list,skin_V_list):  # 肌結果出す用
+    def skin_identification(self,skin_S_list,skin_V_list,image_path):  # 肌結果出す用
         #skin_H_list_O100=[]
         skin_S_list_O100=[]
         #skin_V_list_O100=[]
@@ -232,7 +231,7 @@ class Recognition:
                 skin_S_list_O100.append(skin_S_list[i])
                 #skin_V_list_O100.append(skin_V_list[i])
             i+=1
-        image = Image(R"C:\Users\class\Desktop\images\i1.jpg")
+        image = Image(image_path)
         skin_S_mode = image.mode(skin_S_list_O100,5)
         #skin_V_mode = image.mode(skin_V_list_O100,5)
         #skin_H_mode = image.mode(skin_H_list_O100,5)
@@ -243,10 +242,12 @@ class Recognition:
         return int(skin_S_mode_mean)
     
     def eye_identification(self,white_eye_V,black_eye_V):   # 瞳結果出す用
+        print(f"白目：{white_eye_V}\n黒目：{black_eye_V}")
         contrast = (white_eye_V / black_eye_V)*100
         return int(contrast)
-    
-    
+    #HLS変換使用
+    #コントラストの算出は二種類ある
+    #目頭-目尻の直線(yは適当に変える)で白から黒に変わったところのコントラストをなんか頑張る
 """ 作成したけど使わなかった残骸たち
 def binarization(self,img_gray):    # 2値化まとめ
     # 大津の二値化
