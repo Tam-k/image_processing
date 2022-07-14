@@ -13,19 +13,20 @@ image = ImageProcessing.Image(image_path)
 recog = ImageProcessing.Recognition()
 
 # 画像の読み込み、リサイズ：読込方法要検討、リサイズも場所変える？
-img_cv2 , img_gray , img_RGB = image.loading()
+#img_cv2 , img_gray , 
+img_RGB = image.loading()
 img_resized = image.resize(img_RGB , 1000)  # 縦横の最大値
 # image.image_display(img_RGB)
 # 顔の位置を見てランドマーク作成
 rects, scores, types = recog.face_recognition(img_resized)
 landmark = recog.landmark_maker(img_resized,rects)
 
-eye_img, x_min, x_max, y_min, y_max = recog.cut_out_eye_img(img_resized, landmark[36:42])
+eye_img = recog.cut_out_eye_img(img_resized, landmark[36:42])   #, x_min, x_max, y_min, y_max 
 
 
 # 肌色取得処理
 img_skin = recog.skin(landmark , img_resized)
-skin_H_list,skin_S_list,skin_V_list ,skin_HSV_array = recog.color(img_skin)
+skin_H_list,skin_S_list,skin_V_list = recog.color(img_skin)
 skin_S_mode_mean = recog.skin_identification(skin_S_list,skin_V_list)   # 肌結果出力用
 print(f"肌 S = {str(skin_S_mode_mean)}")
 
@@ -38,7 +39,7 @@ HSV_1,HSV_2 = recog.white_eye_color(img_resized,x,y,x_2,y_2)
 white_eye_V = int(max(HSV_1[2],HSV_2[2]))
 #print(white_eye_V)
 # 黒目(書き換え多分終わり)
-H_list,S_list,V_list ,HSV_array= recog.color(img_resized_iris)
+H_list,S_list,V_list = recog.color(img_resized_iris)
 H_list_re,S_list_re,V_list_re = recog.dark_eyed_color(H_list,S_list,V_list)
 black_eye_V = int(np.mean(V_list_re))
 #print(black_eye_V)
@@ -47,7 +48,7 @@ contrast = recog.eye_identification(white_eye_V,black_eye_V)    # 瞳結果出�
 print(f"瞳 V = {str(contrast)}")
 
 
-img_iris_gray = cv2.cvtColor(eye_img, cv2.COLOR_RGB2GRAY)
+#img_iris_gray = cv2.cvtColor(eye_img, cv2.COLOR_RGB2GRAY)
 
 
 

@@ -14,7 +14,7 @@ class Image:
         img_cv2 = cv2.imread(self.image_path, cv2.IMREAD_COLOR)
         img_gry = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2GRAY)
         img_RGB = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
-        return (img_cv2,img_gry,img_RGB)
+        return (img_RGB)
     
     def resize(self,img,resize):    # 縦もしくは横の最大値にしたい数値
         height, width = img.shape[:2]
@@ -102,7 +102,7 @@ class Recognition:
         y_min = max(min(y_list) - 3, 0)
         y_max = min(max(y_list) + 4, height)
         eye_img = img_cv2[y_min : y_max, x_min : x_max]
-        return eye_img, x_min, x_max, y_min, y_max
+        return eye_img  #, x_min, x_max, y_min, y_max 
 
     def eye_recognition(self,landmark,eye_img,x_min,y_min,boo): # 表示確認(右目のみ)
         eye_img_copy = copy.deepcopy(eye_img)
@@ -199,7 +199,7 @@ class Recognition:
                 H_list.append(int(y[0]))
                 S_list.append(int(y[1]))
                 V_list.append(int(y[2]))
-        return H_list,S_list,V_list,HSV_array
+        return H_list,S_list,V_list
     
     def skin(self , landmark , img_cv2):    # 目の下当たりの画像取得
         x_list=[]
