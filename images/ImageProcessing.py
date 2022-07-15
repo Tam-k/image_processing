@@ -1,3 +1,4 @@
+from re import A
 import cv2
 import dlib
 import numpy as np
@@ -12,7 +13,6 @@ class Image:
     
     def loading(self):  # 画像の読み込み
         img_cv2 = cv2.imread(self.image_path, cv2.IMREAD_COLOR)
-        img_gry = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2GRAY)
         img_RGB = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
         return (img_RGB)
     
@@ -242,9 +242,37 @@ class Recognition:
         return int(skin_S_mode_mean)
     
     def eye_identification(self,white_eye_V,black_eye_V):   # 瞳結果出す用
-        print(f"白目：{white_eye_V}\n黒目：{black_eye_V}")
+        print(f"白日：{white_eye_V}\n黒目：{black_eye_V}")
         contrast = (white_eye_V / black_eye_V)*100
         return int(contrast)
+    
+    def eye_contrast(self,img_resized,inner_canthus,outer_canthus):
+        x1,y1=inner_canthus
+        x2,y2=outer_canthus
+        img_HLS = cv2.cvtColor(img_resized, cv2.COLOR_RGB2HLS)
+        y = int((y1+y2)/2)
+        eye_length = x2 - x1
+        print(eye_length)
+        L_list = []
+        L_list_squaring = []
+        for i in range(eye_length):
+            a=int(img_HLS[y][i+x1][1])
+            L_list.append(a)
+            L_list_squaring.append(a**2)
+        for i in range(len(L_list_squaring)):
+            if i>=2:
+                print(f"{i} : {L_list_squaring[i]}", end=" , ")
+                print(f"{L_list_squaring[i]-L_list_squaring[i-2]}", end=" , ")
+                print(f"{max(L_list_squaring)-L_list_squaring[i]}")
+        img_resized = cv2.line(img_resized, (x1,y), (x2,y), (255, 255, 255),thickness=1)
+        plt.imshow(img_resized)
+        plt.show()
+        return L_list,L_list_squaring
+        
+        
+    
+    
+    
     #HLS変換使用
     #コントラストの算出は二種類ある
     #目頭-目尻の直線(yは適当に変える)で白から黒に変わったところのコントラストをなんか頑張る

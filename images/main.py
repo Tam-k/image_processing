@@ -7,7 +7,7 @@ import matplotlib.patches as patches
 import ImageProcessing
 
 
-a=str(1)
+a=str(3)
 
 print(f"写真 = i{a}")
 image_path = R"C:\Users\class\Desktop\images\i"+a+".jpg"   # テスト用(変更必須)
@@ -38,22 +38,30 @@ print(f"肌 S = {str(skin_S_mode_mean)}")
 # 白日(書き換え多分終わり)
 img_resized_iris = recog.dark_eyed(landmark , img_resized)
 x,y,x_2,y_2 = recog.white_eyed(landmark)
-
+img_HLS = cv2.cvtColor(img_resized, cv2.COLOR_RGB2HLS)
+HLS_1,HLS_2 = recog.white_eye_color(img_HLS,x,y,x_2,y_2)
+white_eye_L = int(max(HLS_1[1],HLS_2[1]))
+"""
 HSV_1,HSV_2 = recog.white_eye_color(img_resized,x,y,x_2,y_2)
 white_eye_V = int(max(HSV_1[2],HSV_2[2]))
-#print(white_eye_V)
+#print(white_eye_V)"""
 # 黒目(書き換え多分終わり)
 H_list,S_list,V_list = recog.color(img_resized_iris)
 H_list_re,S_list_re,V_list_re = recog.dark_eyed_color(H_list,S_list,V_list)
-black_eye_V = int(np.mean(V_list_re))
+black_eye_L = int(np.mean(V_list_re))
 #print(black_eye_V)
 
-contrast = recog.eye_identification(white_eye_V,black_eye_V)    # 瞳結果出力用
+contrast = recog.eye_identification(white_eye_L,black_eye_L)    # 瞳結果出力用
 print(f"瞳 V = {str(contrast)}")
+
+img_resized_copy = copy.deepcopy(img_resized)
+HLS_list,HLS_list_squaring = recog.eye_contrast(img_resized_copy,landmark[36],landmark[39])
+print("\n////////////////////////////////////////////////////////")
+print(len(HLS_list))
+print(len(HLS_list_squaring))
 
 
 #img_iris_gray = cv2.cvtColor(eye_img, cv2.COLOR_RGB2GRAY)
-
 
 
 
